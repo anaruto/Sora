@@ -1,18 +1,17 @@
 package eu.kanade.tachiyomi.network
 
-import android.webkit.CookieManager
+import kotlinx.coroutines.runBlocking
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
+import uy.kohesive.injekt.injectLazy
 
 class AndroidCookieJar : CookieJar {
 
-    private val manager = CookieManager.getInstance()
+    private val provider: HikariCookieJarProvider by injectLazy()
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-        val urlString = url.toString()
-
-        cookies.forEach { manager.setCookie(urlString, it.toString()) }
+        provider.getCookieJar(0L).saveFromResponse(url, cookies)
     }
 
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
@@ -20,35 +19,23 @@ class AndroidCookieJar : CookieJar {
     }
 
     fun get(url: HttpUrl): List<Cookie> {
-        val cookies = manager.getCookie(url.toString())
-
-        return if (cookies != null && cookies.isNotEmpty()) {
-            cookies.split(";").mapNotNull { Cookie.parse(url, it) }
-        } else {
-            emptyList()
-        }
+        return provider.getCookieJar(0L).loadForRequest(url)
     }
 
     fun remove(url: HttpUrl, cookieNames: List<String>? = null, maxAge: Int = -1): Int {
-        val urlString = url.toString()
-        val cookies = manager.getCookie(urlString) ?: return 0
-
-        fun List<String>.filterNames(): List<String> {
-            return if (cookieNames != null) {
-                this.filter { it in cookieNames }
-            } else {
-                this
+        val cookies = get(url)
+        val filtered = cookies.filter { cookieNames == null || it.name in cookieNames }
+        runBlocking {
+            filtered.forEach { cookie ->
+                provider.setCookie(0L, cookie.domain, cookie.name, "", 0L)
             }
         }
-
-        return cookies.split(";")
-            .map { it.substringBefore("=") }
-            .filterNames()
-            .onEach { manager.setCookie(urlString, "$it=;Max-Age=$maxAge") }
-            .count()
+        return filtered.size
     }
 
     fun removeAll() {
-        manager.removeAllCookies {}
+        runBlocking {
+            provider.clearForSource(0L)
+        }
     }
 }
