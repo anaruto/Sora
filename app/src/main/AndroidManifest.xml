@@ -155,7 +155,7 @@
             android:theme="@style/Theme.Tachiyomi" />
 
         <activity
-            android:name=".ui.webview.WebViewActivity"
+            android:name=".ui.webview.HikariWebViewActivity"
             android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />
 

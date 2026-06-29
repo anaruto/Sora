@@ -9,7 +9,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Looper
-import android.webkit.WebView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -109,7 +108,13 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // Avoid potential crashes
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val process = getProcessName()
-            if (packageName != process) WebView.setDataDirectorySuffix(process)
+            if (packageName != process) {
+                try {
+                    Class.forName("android.webkit.WebView")
+                        .getMethod("setDataDirectorySuffix", String::class.java)
+                        .invoke(null, process)
+                } catch (_: Exception) {}
+            }
         }
 
         Injekt.importModule(PreferenceModule(this))

@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.i18n)
 
     api(libs.logcat)
+    api(libs.injekt)
 
     api(libs.rxJava)
 
