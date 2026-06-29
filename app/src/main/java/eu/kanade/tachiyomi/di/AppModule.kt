@@ -44,6 +44,16 @@ import uy.kohesive.injekt.api.addSingleton
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 import java.lang.ref.WeakReference
+import eu.kanade.tachiyomi.core.webview.GeckoEngineProvider
+import eu.kanade.tachiyomi.core.webview.HikariCookieDatabase
+import eu.kanade.tachiyomi.core.webview.HikariCookieStorage
+import eu.kanade.tachiyomi.core.webview.GeckoCloudflareSolver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import androidx.room.Room
+import eu.kanade.tachiyomi.network.HikariCookieJarProvider
+import eu.kanade.tachiyomi.network.interceptor.CloudflareSolver
 
 private val lock = Any()
 
@@ -107,6 +117,20 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { ChapterCache(app, get()) }
         addSingletonFactory { CoverCache(app) }
+
+        addSingletonFactory {
+            Room.databaseBuilder(
+                app,
+                HikariCookieDatabase::class.java,
+                "hikari_cookies.db"
+            ).fallbackToDestructiveMigration().build()
+        }
+        addSingletonFactory { get<HikariCookieDatabase>().cookieDao() }
+        addSingletonFactory { HikariCookieStorage(get(), CoroutineScope(SupervisorJob() + Dispatchers.Default)) }
+        addSingletonFactory<HikariCookieJarProvider> { get<HikariCookieStorage>() }
+        addSingletonFactory { GeckoEngineProvider(app, get()) }
+        addSingletonFactory { GeckoCloudflareSolver(get(), get(), app) }
+        addSingletonFactory<CloudflareSolver> { get<GeckoCloudflareSolver>() }
 
         addSingletonFactory { NetworkHelper(app, get()) }
         addSingletonFactory { JavaScriptEngine(app) }

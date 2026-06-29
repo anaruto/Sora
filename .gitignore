@@ -19,3 +19,4 @@ app/release
 app/.cxx/
 
 *.log
+.agents/
