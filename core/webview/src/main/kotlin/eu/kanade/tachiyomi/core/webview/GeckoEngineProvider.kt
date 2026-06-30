@@ -18,8 +18,19 @@ class GeckoEngineProvider(
             .aboutConfigEnabled(false)
             .build()
 
-        GeckoRuntime.create(context, settings)
+        val rt = GeckoRuntime.create(context, settings)
+        rt.webExtensionController.ensureBuiltIn(
+            "resource://android/assets/cookie-extension/",
+            "cookie-extractor@hikari.app"
+        ).accept(
+            { ext -> cookieExtension = ext },
+            { _ -> }
+        )
+        rt
     }
+
+    var cookieExtension: org.mozilla.geckoview.WebExtension? = null
+        private set
 
     fun createSession(privateMode: Boolean = false): GeckoSession {
         val settings = GeckoSessionSettings.Builder()

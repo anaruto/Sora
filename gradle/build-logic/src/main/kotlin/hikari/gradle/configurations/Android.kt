@@ -16,7 +16,7 @@ fun Project.configureAndroid() {
                 targetSdk = hikarix.versions.android.sdk.target.get().toInt()
             }
 
-            ndkVersion = hikarix.versions.android.ndk.get()
+            // ndkVersion = hikarix.versions.android.ndk.get()
         }
 
         compileSdk = hikarix.versions.android.sdk.compile.get().toInt()
