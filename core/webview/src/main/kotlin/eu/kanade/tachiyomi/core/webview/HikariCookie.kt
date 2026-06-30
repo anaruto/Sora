@@ -7,13 +7,13 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Upsert
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
-import org.mozilla.geckoview.GeckoSession
 import eu.kanade.tachiyomi.network.HikariCookieJarProvider
 
 interface ContentCookieStorage {
@@ -49,22 +49,22 @@ interface HikariCookieDao {
     fun getCookiesForDomain(domain: String, sourceId: Long): Flow<List<HikariCookieEntity>>
 
     @Query("SELECT * FROM hikari_cookies WHERE sourceId = :sourceId")
-    suspend fun getCookiesForSource(sourceId: Long): List<HikariCookieEntity>
+    fun getCookiesForSource(sourceId: Long): List<HikariCookieEntity>
 
     @Upsert
-    suspend fun upsert(cookie: HikariCookieEntity): Long
+    fun upsert(cookie: HikariCookieEntity): Long
 
     @Query("DELETE FROM hikari_cookies WHERE domain = :domain AND name = :name AND sourceId = :sourceId")
-    suspend fun delete(domain: String, name: String, sourceId: Long): Int
+    fun delete(domain: String, name: String, sourceId: Long): Int
 
     @Query("DELETE FROM hikari_cookies WHERE sourceId = :sourceId")
-    suspend fun clearSource(sourceId: Long): Int
+    fun clearSource(sourceId: Long): Int
 
     @Query("DELETE FROM hikari_cookies WHERE expiresAt != -1 AND expiresAt < :now")
-    suspend fun purgeExpired(now: Long): Int
+    fun purgeExpired(now: Long): Int
 
     @Query("SELECT * FROM hikari_cookies")
-    suspend fun getAll(): List<HikariCookieEntity>
+    fun getAll(): List<HikariCookieEntity>
 }
 
 class HikariCookieStorage(
@@ -74,15 +74,15 @@ class HikariCookieStorage(
     // --- OkHttp integration ---
     override fun getCookieJar(sourceId: Long): CookieJar = object : CookieJar {
         override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-            scope.launch {
+            scope.launch(Dispatchers.IO) {
                 cookies.forEach { cookie ->
                     dao.upsert(cookie.toEntity(sourceId))
                 }
             }
         }
 
-        override fun loadForRequest(url: HttpUrl): List<Cookie> = runBlocking {
-            dao.getCookiesForSource(sourceId)
+        override fun loadForRequest(url: HttpUrl): List<Cookie> {
+            return dao.getCookiesForSource(sourceId)
                 .filter { it.domain == url.host || url.host.endsWith(".${it.domain}") }
                 .mapNotNull { it.toOkHttpCookie() }
         }
@@ -94,21 +94,27 @@ class HikariCookieStorage(
 
     // --- Manual set/get for CloudFlare bypass ---
     override suspend fun setCookie(sourceId: Long, domain: String, name: String, value: String, expiresAt: Long) {
-        dao.upsert(HikariCookieEntity(sourceId = sourceId, domain = domain, name = name, value = value, expiresAt = expiresAt))
+        withContext(Dispatchers.IO) {
+            dao.upsert(HikariCookieEntity(sourceId = sourceId, domain = domain, name = name, value = value, expiresAt = expiresAt))
+        }
     }
 
-    suspend fun getCookieValue(sourceId: Long, domain: String, name: String): String? {
-        return dao.getCookiesForSource(sourceId).firstOrNull {
+    suspend fun getCookieValue(sourceId: Long, domain: String, name: String): String? = withContext(Dispatchers.IO) {
+        dao.getCookiesForSource(sourceId).firstOrNull {
             it.domain == domain && it.name == name
         }?.value
     }
 
     override suspend fun clearForSource(sourceId: Long) {
-        dao.clearSource(sourceId)
+        withContext(Dispatchers.IO) {
+            dao.clearSource(sourceId)
+        }
     }
 
     suspend fun purgeExpired() {
-        dao.purgeExpired(System.currentTimeMillis())
+        withContext(Dispatchers.IO) {
+            dao.purgeExpired(System.currentTimeMillis())
+        }
     }
 
     // --- Mappers ---
@@ -144,7 +150,7 @@ class GeckoWebContentCookieStorage(
 ) : ContentCookieStorage {
 
     override fun getCookies(host: String, callback: ContentCookieStorage.GetCookiesCallback) {
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             val cookies = dao.getAll()
                 .filter { it.domain == host || host.endsWith(".${it.domain}") }
                 .joinToString("; ") { "${it.name}=${it.value}" }
@@ -157,7 +163,7 @@ class GeckoWebContentCookieStorage(
         cookieString: String,
         callback: ContentCookieStorage.SetCookieCallback?,
     ) {
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             parseCookieString(uri, cookieString).forEach { entity ->
                 dao.upsert(entity)
             }
