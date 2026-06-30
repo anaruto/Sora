@@ -178,19 +178,8 @@ class GeckoBrowserActivity : BaseActivity() {
                 ) {
                     AndroidView(
                         factory = { ctx ->
-                            FragmentContainerView(ctx).apply {
-                                id = View.generateViewId()
-                            }
-                        },
-                        update = { view ->
-                            val existing = supportFragmentManager.findFragmentById(view.id)
-                            if (existing == null) {
-                                val fragment = GeckoBrowserFragment().apply {
-                                    geckoSession?.let { setSession(it) }
-                                }
-                                supportFragmentManager.beginTransaction()
-                                    .replace(view.id, fragment)
-                                    .commit()
+                            org.mozilla.geckoview.GeckoView(ctx).apply {
+                                geckoSession?.let { setSession(it) }
                             }
                         },
                         modifier = Modifier.fillMaxSize()
