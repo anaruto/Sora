@@ -18,7 +18,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPageCache
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
-import eu.kanade.tachiyomi.ui.webview.WebViewActivity
+import eu.kanade.tachiyomi.browser.GeckoBrowserActivity
 import eu.kanade.tachiyomi.util.system.dpToPx
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -311,7 +311,7 @@ class WebtoonPageHolder(
                 errorLayout?.actionOpenInWebView?.setOnClickListener {
                     val sourceId = viewer.activity.viewModel.manga?.source
 
-                    val intent = WebViewActivity.newIntent(context, imageUrl, sourceId)
+                    val intent = GeckoBrowserActivity.newIntent(context, imageUrl, sourceId)
                     context.startActivity(intent)
                 }
             }

@@ -155,7 +155,7 @@
             android:theme="@style/Theme.Tachiyomi" />
 
         <activity
-            android:name=".ui.webview.WebViewActivity"
+            android:name=".browser.GeckoBrowserActivity"
             android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />
 
@@ -226,13 +226,6 @@
             android:exported="true"
             android:multiprocess="false"
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
-
-        <meta-data
-            android:name="android.webkit.WebView.EnableSafeBrowsing"
-            android:value="false" />
-        <meta-data
-            android:name="android.webkit.WebView.MetricsOptOut"
-            android:value="true" />
 
     </application>
 

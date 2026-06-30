@@ -22,7 +22,6 @@ import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.DeviceUtil
-import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import hikari.core.common.FeatureFlags
 import kotlinx.collections.immutable.mutate
@@ -102,17 +101,11 @@ class DebugInfoScreen : Screen() {
                 ),
                 getProfileVerifierPreference(),
                 Preference.PreferenceItem.TextPreference(
-                    title = "WebView version",
-                    subtitle = getWebViewVersion(),
+                    title = "GeckoView version",
+                    subtitle = "GeckoView 150.0.20260511200624",
                 ),
             ),
         )
-    }
-
-    @Composable
-    @ReadOnlyComposable
-    private fun getWebViewVersion(): String {
-        return WebViewUtil.getVersion(LocalContext.current)
     }
 
     @Composable

@@ -9,7 +9,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Looper
-import android.webkit.WebView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -29,6 +28,7 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
+import eu.kanade.tachiyomi.browser.GeckoRuntimeManager
 import eu.kanade.tachiyomi.crash.CrashActivity
 import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
 import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
@@ -49,7 +49,6 @@ import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
-import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
@@ -106,11 +105,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             Security.insertProviderAt(Conscrypt.newProvider(), 1)
         }
 
-        // Avoid potential crashes
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val process = getProcessName()
-            if (packageName != process) WebView.setDataDirectorySuffix(process)
-        }
+        // Initialize GeckoView runtime on startup
+        GeckoRuntimeManager.initialize(this)
 
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(AppModule(this))
@@ -258,21 +254,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         SecureActivityDelegate.onApplicationStopped()
     }
 
-    override fun getPackageName(): String {
-        try {
-            // Override the value passed as X-Requested-With in WebView requests
-            val stackTrace = Looper.getMainLooper().thread.stackTrace
-            val isChromiumCall = stackTrace.any { trace ->
-                trace.className.lowercase() in setOf("org.chromium.base.buildinfo", "org.chromium.base.apkinfo") &&
-                    trace.methodName.lowercase() in setOf("getall", "getpackagename", "<init>")
-            }
 
-            if (isChromiumCall) return WebViewUtil.spoofedPackageName(applicationContext)
-        } catch (_: Exception) {
-        }
-
-        return super.getPackageName()
-    }
 
     private fun setupNotificationChannels() {
         try {

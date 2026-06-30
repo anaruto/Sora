@@ -1,54 +1,39 @@
 package eu.kanade.tachiyomi.network
 
-import android.webkit.CookieManager
+import android.content.Context
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 
-class AndroidCookieJar : CookieJar {
+class AndroidCookieJar(context: Context) : CookieJar {
 
-    private val manager = CookieManager.getInstance()
+    private val persistentCookieJar = PersistentCookieJar(context)
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-        val urlString = url.toString()
-
-        cookies.forEach { manager.setCookie(urlString, it.toString()) }
+        persistentCookieJar.saveFromResponse(url, cookies)
     }
 
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
-        return get(url)
+        return persistentCookieJar.loadForRequest(url)
     }
 
     fun get(url: HttpUrl): List<Cookie> {
-        val cookies = manager.getCookie(url.toString())
-
-        return if (cookies != null && cookies.isNotEmpty()) {
-            cookies.split(";").mapNotNull { Cookie.parse(url, it) }
-        } else {
-            emptyList()
-        }
+        return persistentCookieJar.get(url)
     }
 
     fun remove(url: HttpUrl, cookieNames: List<String>? = null, maxAge: Int = -1): Int {
-        val urlString = url.toString()
-        val cookies = manager.getCookie(urlString) ?: return 0
-
-        fun List<String>.filterNames(): List<String> {
-            return if (cookieNames != null) {
-                this.filter { it in cookieNames }
-            } else {
-                this
-            }
-        }
-
-        return cookies.split(";")
-            .map { it.substringBefore("=") }
-            .filterNames()
-            .onEach { manager.setCookie(urlString, "$it=;Max-Age=$maxAge") }
-            .count()
+        return persistentCookieJar.remove(url, cookieNames, maxAge)
     }
 
     fun removeAll() {
-        manager.removeAllCookies {}
+        persistentCookieJar.removeAll()
+    }
+
+    fun getAllCookies(): List<Cookie> {
+        return persistentCookieJar.getAllCookies()
+    }
+
+    fun addAll(cookies: List<Cookie>) {
+        persistentCookieJar.addAll(cookies)
     }
 }

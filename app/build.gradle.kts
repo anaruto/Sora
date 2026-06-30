@@ -266,6 +266,7 @@ dependencies {
     implementation(libs.composeMaterialMotion)
     implementation(libs.swipe)
     implementation(libs.composeWebview)
+    implementation(libs.geckoview)
     implementation(libs.composeGrid)
     implementation(libs.reorderable)
     implementation(libs.bundles.markdown)

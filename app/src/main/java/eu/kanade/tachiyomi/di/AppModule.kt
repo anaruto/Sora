@@ -19,6 +19,8 @@ import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.interceptor.CloudflareSolver
+import eu.kanade.tachiyomi.browser.GeckoCloudflareSolver
 import eu.kanade.tachiyomi.source.AndroidSourceManager
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -108,7 +110,8 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { ChapterCache(app, get()) }
         addSingletonFactory { CoverCache(app) }
 
-        addSingletonFactory { NetworkHelper(app, get()) }
+        addSingletonFactory { NetworkHelper(app, get(), get()) }
+        addSingletonFactory<CloudflareSolver> { GeckoCloudflareSolver(app) }
         addSingletonFactory { JavaScriptEngine(app) }
 
         addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get()) }

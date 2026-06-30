@@ -43,6 +43,7 @@ dependencies {
     api(libs.kotlinx.serialization.jsonOkio)
 
     api(libs.androidx.preference)
+    api(libs.androidx.datastore.preferences)
 
     implementation(libs.jsoup)
 

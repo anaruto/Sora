@@ -33,6 +33,8 @@ composeGrid = "1.2.2"
 composeMaterialMotion = "2.0.1"
 composeRichEditor = "1.0.0-rc13"
 composeWebview = "0.33.6"
+geckoview = "150.0.20260511200624"
+androidx-datastore = "1.1.1"
 conscrypt = "2.5.3"
 directionalViewPager = "1.0.0"
 diskLruCache = "2.0.2"
@@ -77,6 +79,8 @@ voyager = "1.1.0-beta03"
 xmlutil = "0.91.3"
 
 [libraries]
+geckoview = { module = "org.mozilla.geckoview:geckoview-arm64-v8a", version.ref = "geckoview" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 android-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugar" }
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }

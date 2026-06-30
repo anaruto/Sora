@@ -18,9 +18,10 @@ import java.util.concurrent.TimeUnit
 class NetworkHelper(
     private val context: Context,
     private val preferences: NetworkPreferences,
+    private val cloudflareSolver: eu.kanade.tachiyomi.network.interceptor.CloudflareSolver,
 ) {
 
-    val cookieJar = AndroidCookieJar()
+    val cookieJar = AndroidCookieJar(context)
 
     private val cronetEngine by lazy {
         CronetEngine.Builder(context)
@@ -124,7 +125,7 @@ class NetworkHelper(
 
     val client = clientBuilder
         .addInterceptor(
-            CloudflareInterceptor(context, cookieJar, ::defaultUserAgentProvider),
+            CloudflareInterceptor(context, cookieJar, ::defaultUserAgentProvider, cloudflareSolver),
         )
         .build()
 

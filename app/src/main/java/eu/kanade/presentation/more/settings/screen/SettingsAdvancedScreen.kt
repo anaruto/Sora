@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
-import android.webkit.WebStorage
-import android.webkit.WebView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -62,7 +60,6 @@ import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import eu.kanade.tachiyomi.util.system.powerManager
-import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
@@ -179,17 +176,10 @@ object SettingsAdvancedScreen : SearchableSettings {
                                     title = stringResource(MR.strings.pref_clear_webview_data),
                                     onClick = {
                                         try {
-                                            WebView(context).run {
-                                                setDefaultSettings()
-                                                clearCache(true)
-                                                clearFormData()
-                                                clearHistory()
-                                                clearSslPreferences()
-                                            }
-                                            WebStorage.getInstance().deleteAllData()
-                                            context.applicationInfo?.dataDir?.let {
-                                                File("$it/app_webview/").deleteRecursively()
-                                            }
+                                            eu.kanade.tachiyomi.browser.GeckoRuntimeManager.getRuntime(context).storageController.clearData(
+                                                org.mozilla.geckoview.StorageController.ClearFlags.ALL
+                                            )
+                                            uy.kohesive.injekt.Injekt.get<eu.kanade.tachiyomi.network.NetworkHelper>().cookieJar.removeAll()
                                             context.toast(MR.strings.webview_data_deleted)
                                         } catch (e: Throwable) {
                                             logcat(LogPriority.ERROR, e)

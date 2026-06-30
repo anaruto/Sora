@@ -29,7 +29,11 @@ val appModule = module {
         }
     }
 
-    single { NetworkHelper(androidApplication(), get()) }
+    single<eu.kanade.tachiyomi.network.interceptor.CloudflareSolver> {
+        eu.kanade.tachiyomi.browser.GeckoCloudflareSolver(androidApplication())
+    }
+
+    single { NetworkHelper(androidApplication(), get(), get()) }
 }
 
 val koinModules = listOf(

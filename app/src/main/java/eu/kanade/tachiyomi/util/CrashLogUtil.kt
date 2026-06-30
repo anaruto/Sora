@@ -6,7 +6,6 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.util.storage.getUriCompat
-import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
@@ -50,7 +49,7 @@ class CrashLogUtil(
             Device manufacturer: ${Build.MANUFACTURER}
             Device name: ${Build.DEVICE} (${Build.PRODUCT})
             Device model: ${Build.MODEL}
-            WebView: ${WebViewUtil.getVersion(context)}
+            WebView: GeckoView 150.0.20260511200624
             Current time: ${OffsetDateTime.now(ZoneId.systemDefault())}
         """.trimIndent()
     }

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "Cookie Bridge Extension",
+  "version": "1.0",
+  "description": "GeckoView Cookie Sync Extension",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "cookie-bridge@hikari"
+    }
+  },
+  "permissions": [
+    "cookies",
+    "nativeMessaging",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  }
+}
