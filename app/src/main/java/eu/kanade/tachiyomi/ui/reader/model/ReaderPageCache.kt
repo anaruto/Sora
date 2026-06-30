@@ -92,6 +92,8 @@ object ReaderPageCache : ComponentCallbacks2 {
 
     private data class CachedBitmap(val bitmap: Bitmap, val byteCount: Int)
 
+    private val cacheLock = Any()
+
     private val cache = object : LruCache<String, CachedBitmap>(cacheSize) {
         override fun sizeOf(key: String, value: CachedBitmap): Int {
             return value.byteCount
@@ -109,7 +111,9 @@ object ReaderPageCache : ComponentCallbacks2 {
         val preferences = Injekt.get<ReaderPreferences>()
         if (!preferences.readerPageCache.get()) return null
         val key = getKey(page) ?: return null
-        return cache.get(key)?.bitmap
+        return synchronized(cacheLock) {
+            cache.get(key)?.bitmap
+        }
     }
 
     fun preload(page: ReaderPage) {
@@ -117,7 +121,10 @@ object ReaderPageCache : ComponentCallbacks2 {
         if (!preferences.readerPageCache.get()) return
         val streamFn = page.stream ?: return
         val key = getKey(page) ?: return
-        if (cache.get(key) != null) return
+        val hasEntry = synchronized(cacheLock) {
+            cache.get(key) != null
+        }
+        if (hasEntry) return
 
         val freeHeap = Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
         if (freeHeap < MIN_FREE_HEAP_BYTES) return
@@ -184,7 +191,9 @@ object ReaderPageCache : ComponentCallbacks2 {
                     denoisingStrength = preferences.readerDenoisingStrength.get() / 10.0f,
                 )
                 if (success && isActive) {
-                    cache.put(key, CachedBitmap(bitmap, bitmap.allocationByteCount))
+                    synchronized(cacheLock) {
+                        cache.put(key, CachedBitmap(bitmap, bitmap.allocationByteCount))
+                    }
                     bitmap = null
                 } else {
                     bitmapPool.offer(bitmap)
@@ -205,7 +214,9 @@ object ReaderPageCache : ComponentCallbacks2 {
     fun clear() {
         jobs.values.forEach { it.cancel() }
         jobs.clear()
-        cache.trimToSize(-1)
+        synchronized(cacheLock) {
+            cache.evictAll()
+        }
         bitmapPool.flush()
     }
 

@@ -114,6 +114,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                         .getMethod("setDataDirectorySuffix", String::class.java)
                         .invoke(null, process)
                 } catch (_: Exception) {}
+                return
             }
         }
 
